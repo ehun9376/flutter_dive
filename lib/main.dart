@@ -1,8 +1,21 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_dj/pratice_page.dart';
+import 'package:flutter_dj/model/app_model.dart';
+import 'package:flutter_dj/pages/pratice_page.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  var appModel = AppModel();
+  WidgetsFlutterBinding.ensureInitialized();
+
+  runApp(ChangeNotifierProvider<AppModel>.value(
+    value: appModel,
+    builder: (context, child) {
+      return const MyApp();
+    },
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -18,15 +31,13 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: '潛水練習器'),
+      home: const MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -35,11 +46,9 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          title: Text(widget.title),
-        ),
-        body: PraticePage());
+    var appModel = context.read<AppModel>();
+    appModel.getData();
+    appModel.saveData();
+    return PraticePage();
   }
 }

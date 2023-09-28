@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dj/extension.dart';
+import 'package:flutter_dj/model/app_model.dart';
+import 'package:flutter_dj/pages/setting_page.dart';
 import 'package:flutter_dj/simple_widget/simple_button.dart';
 import 'package:flutter_dj/simple_widget/simple_text.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +29,22 @@ class PraticePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lostLifeLabel = Selector<AppModel, int>(
+        selector: (p0, p1) => p1.life,
+        builder: (context, lostLife, child) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              SimpleText(
+                text: "剩餘訓練次數：$lostLife次",
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                align: TextAlign.right,
+              ).padding(),
+            ],
+          );
+        });
+
     final maxTimeLabel = Selector<PraticePageViewmodel, int>(
         selector: (p0, p1) => p1.maxTime,
         builder: (context, maxTime, child) {
@@ -78,9 +96,26 @@ class PraticePage extends StatelessWidget {
     return ChangeNotifierProvider<PraticePageViewmodel>.value(
       value: viewModel,
       builder: (context, child) {
-        return Column(
-          children: [maxTimeLabel, slider, startButton],
-        ).singleChildScrollView(); // replace this with your desired widget
+        return Scaffold(
+            appBar: AppBar(
+              backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+              title: const Text("潛水訓練器"),
+              actions: [
+                SimpleButton(
+                  buttonIcon: Icons.settings,
+                  borderColor: Colors.transparent,
+                  iconColor: Colors.black,
+                  buttonAction: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => const SettingPage(),
+                    ));
+                  },
+                )
+              ],
+            ),
+            body: Column(
+              children: [lostLifeLabel, maxTimeLabel, slider, startButton],
+            ).singleChildScrollView()); // replace this with your desired widget
       },
     );
   }
