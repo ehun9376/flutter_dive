@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dj/extension.dart';
+import 'package:flutter_dj/helper/snackbar_helper.dart';
 import 'package:flutter_dj/model/app_model.dart';
 import 'package:flutter_dj/pages/setting_page.dart';
 import 'package:flutter_dj/simple_widget/simple_button.dart';
@@ -13,17 +15,21 @@ class PraticePageViewmodel extends ChangeNotifier {
   bool get isCounting => _isCounting;
   set isCounting(newValue) {
     _isCounting = newValue;
+    if (newValue) {
+      startTimer();
+    }
     notifyListeners();
   }
 
-  int _maxTime = 120;
+  var second = 1;
+
+  int _maxTime = 0;
   int get maxTime => _maxTime;
   set maxTime(newValue) {
     _maxTime = newValue;
-
+    var breathTimeBaseline = 150;
     List<int> copyList = List.from(breathTimeList);
 
-    var breathTimeBaseline = 150;
     for (var i = 0; i < copyList.length; i++) {
       copyList[i] = breathTimeBaseline - 15 * i;
     }
@@ -33,7 +39,7 @@ class PraticePageViewmodel extends ChangeNotifier {
     List<int> copyHoldList = List.from(_holdTimeList);
 
     for (var i = 0; i < copyHoldList.length; i++) {
-      copyHoldList[i] = newValue ~/ 2;
+      copyHoldList[i] = _maxTime ~/ 2;
     }
     _holdTimeList = copyHoldList;
 
@@ -42,7 +48,7 @@ class PraticePageViewmodel extends ChangeNotifier {
 
   List<int> _holdTimeList = [0, 0, 0, 0, 0, 0, 0, 0];
   List<int> get holdTimeList => _holdTimeList;
-  set bholdTimeList(newValue) {
+  set holdTimeList(newValue) {
     _holdTimeList = newValue;
     notifyListeners();
   }
@@ -53,10 +59,78 @@ class PraticePageViewmodel extends ChangeNotifier {
     _breathTimeList = newValue;
     notifyListeners();
   }
+
+  Timer? _timer;
+
+  updateTime(int count) {
+    //雙數是呼吸
+    if (count % 2 == 0) {
+      List<int> tempBreathList = List.from(breathTimeList);
+      for (var i = 0; i <= count; i++) {
+        if (tempBreathList[i] != 0) {
+          tempBreathList[i] = tempBreathList[i] - second;
+          if (tempBreathList[i] <= 0) {
+            tempBreathList[i] = 0;
+            currentCount += 1;
+          }
+          break;
+        }
+      }
+      breathTimeList = tempBreathList;
+    } else {
+      //單數是閉氣
+      List<int> tempHoldList = List.from(holdTimeList);
+      for (var i = 0; i <= count; i++) {
+        if (tempHoldList[i] != 0) {
+          tempHoldList[i] = tempHoldList[i] - second;
+          if (tempHoldList[i] <= 0) {
+            tempHoldList[i] = 0;
+            currentCount += 1;
+          }
+          break;
+        }
+      }
+      holdTimeList = tempHoldList;
+    }
+  }
+
+  var currentCount = 0;
+
+  resetAll() {
+    currentCount = 0;
+    isCounting = false;
+    _timer?.cancel();
+
+    List<int> copyList = List.from(breathTimeList);
+    var breathTimeBaseline = 150;
+    for (var i = 0; i < copyList.length; i++) {
+      copyList[i] = breathTimeBaseline - 15 * i;
+    }
+
+    _breathTimeList = copyList;
+
+    List<int> copyHoldList = List.from(_holdTimeList);
+
+    for (var i = 0; i < copyHoldList.length; i++) {
+      copyHoldList[i] = _maxTime ~/ 2;
+    }
+    _holdTimeList = copyHoldList;
+  }
+
+  startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (currentCount > (breathTimeList.length + holdTimeList.length) - 1) {
+        _timer?.cancel();
+        resetAll();
+      } else {
+        updateTime(currentCount);
+      }
+    });
+  }
 }
 
 class PraticePage extends StatefulWidget {
-  PraticePage({super.key});
+  const PraticePage({super.key});
 
   @override
   State<PraticePage> createState() => _PraticePageState();
@@ -67,6 +141,8 @@ class _PraticePageState extends State<PraticePage> {
 
   @override
   Widget build(BuildContext context) {
+    var appModel = context.read<AppModel>();
+    viewModel.maxTime = 120;
     final lostLifeLabel = Selector<AppModel, int>(
         selector: (p0, p1) => p1.life,
         builder: (context, lostLife, child) {
@@ -168,8 +244,17 @@ class _PraticePageState extends State<PraticePage> {
               cornerRadius: 15,
               buttonMiniSize: const Size(200, 45),
               backgroundColor: isCounting ? Colors.red : Colors.green,
-              buttonAction: () {
+              buttonAction: () async {
+                if (appModel.life <= 0) {
+                  showAppSnackBar("沒有額度囉，請至設定頁購買。", context);
+                  return;
+                }
                 viewModel.isCounting = !viewModel.isCounting;
+                if (!viewModel.isCounting) {
+                  viewModel.resetAll();
+                } else {
+                  context.read<AppModel>().saveData(addLife: -1);
+                }
               },
             ).padding(),
           ],

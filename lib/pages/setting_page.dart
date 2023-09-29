@@ -20,12 +20,6 @@ class SettingPage extends StatelessWidget {
           selector: (p0, p1) => p1.dataModels,
           builder: (context, list, child) {
             List<DataModel> copyList = List.from(list);
-            copyList.where((element) =>
-                appModel.iapCenter?.products
-                    .map((e) => e.id)
-                    .toList()
-                    .contains(element.id) ??
-                true);
             return ListView.builder(
               itemCount: copyList.length,
               itemBuilder: (BuildContext context, int index) {

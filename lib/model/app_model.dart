@@ -34,14 +34,14 @@ class AppModel extends ChangeNotifier {
         kIds: _dataModels.map((e) => e.id).toList(),
         buyComplete: (id) {
           saveData(
-              newTime:
+              addLife:
                   dataModels.firstWhere((element) => element.id == id).number);
         });
   }
 
-  Future<void> saveData({int newTime = 0}) async {
+  Future<void> saveData({int addLife = 0}) async {
     var loadData = await readData();
-    loadData += newTime;
+    loadData += addLife;
     life = loadData;
 
     final prefs = await SharedPreferences.getInstance();
