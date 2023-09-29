@@ -41,13 +41,18 @@ class IAPCenter {
     products = response.productDetails;
   }
 
-  buy(String wantBuyID) {
-    final ProductDetails productDetails =
-        products.firstWhere((element) => element.id == wantBuyID);
-    final PurchaseParam purchaseParam =
-        PurchaseParam(productDetails: productDetails);
+  bool buy(String wantBuyID) {
+    if (products.map((e) => e.id).contains(wantBuyID)) {
+      final ProductDetails productDetails =
+          products.firstWhere((element) => element.id == wantBuyID);
+      final PurchaseParam purchaseParam =
+          PurchaseParam(productDetails: productDetails);
 
-    InAppPurchase.instance.buyConsumable(purchaseParam: purchaseParam);
+      InAppPurchase.instance.buyConsumable(purchaseParam: purchaseParam);
+      return true;
+    } else {
+      return false;
+    }
   }
 
   Future<void> _completePurchase(PurchaseDetails purchaseDetails) async {

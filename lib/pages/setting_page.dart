@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dj/extension.dart';
+import 'package:flutter_dj/helper/snackbar_helper.dart';
 import 'package:flutter_dj/model/app_model.dart';
 import 'package:flutter_dj/simple_widget/simple_button.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +10,7 @@ class SettingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var appModel = context.read<AppModel>();
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -17,17 +19,30 @@ class SettingPage extends StatelessWidget {
       body: Selector<AppModel, List<DataModel>>(
           selector: (p0, p1) => p1.dataModels,
           builder: (context, list, child) {
+            List<DataModel> copyList = List.from(list);
+            copyList.where((element) =>
+                appModel.iapCenter?.products
+                    .map((e) => e.id)
+                    .toList()
+                    .contains(element.id) ??
+                true);
             return ListView.builder(
-              itemCount: list.length,
+              itemCount: copyList.length,
               itemBuilder: (BuildContext context, int index) {
-                return createRow(list[index]);
+                return createRow(copyList[index], () {
+                  if (appModel.iapCenter?.buy(copyList[index].id) ?? false) {
+                    showAppSnackBar("購買處理中", context);
+                  } else {
+                    showAppSnackBar("取得產品資料錯誤", context);
+                  }
+                });
               },
             );
           }),
     );
   }
 
-  Widget createRow(DataModel model) {
+  Widget createRow(DataModel model, Function buttonAction) {
     return Column(
       children: [
         Row(
@@ -42,6 +57,7 @@ class SettingPage extends StatelessWidget {
               imageTextSpace: 20,
               buttonAction: () {
                 //TODO: - IAP
+                buttonAction();
               },
             ),
           ],

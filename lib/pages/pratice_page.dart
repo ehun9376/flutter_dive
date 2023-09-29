@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dj/extension.dart';
 import 'package:flutter_dj/model/app_model.dart';
@@ -18,13 +20,49 @@ class PraticePageViewmodel extends ChangeNotifier {
   int get maxTime => _maxTime;
   set maxTime(newValue) {
     _maxTime = newValue;
+
+    List<int> copyList = List.from(breathTimeList);
+
+    var breathTimeBaseline = 150;
+    for (var i = 0; i < copyList.length; i++) {
+      copyList[i] = breathTimeBaseline - 15 * i;
+    }
+
+    _breathTimeList = copyList;
+
+    List<int> copyHoldList = List.from(_holdTimeList);
+
+    for (var i = 0; i < copyHoldList.length; i++) {
+      copyHoldList[i] = newValue ~/ 2;
+    }
+    _holdTimeList = copyHoldList;
+
+    notifyListeners();
+  }
+
+  List<int> _holdTimeList = [0, 0, 0, 0, 0, 0, 0, 0];
+  List<int> get holdTimeList => _holdTimeList;
+  set bholdTimeList(newValue) {
+    _holdTimeList = newValue;
+    notifyListeners();
+  }
+
+  List<int> _breathTimeList = [0, 0, 0, 0, 0, 0, 0, 0];
+  List<int> get breathTimeList => _breathTimeList;
+  set breathTimeList(newValue) {
+    _breathTimeList = newValue;
     notifyListeners();
   }
 }
 
-class PraticePage extends StatelessWidget {
+class PraticePage extends StatefulWidget {
   PraticePage({super.key});
 
+  @override
+  State<PraticePage> createState() => _PraticePageState();
+}
+
+class _PraticePageState extends State<PraticePage> {
   final PraticePageViewmodel viewModel = PraticePageViewmodel();
 
   @override
@@ -50,7 +88,8 @@ class PraticePage extends StatelessWidget {
         builder: (context, maxTime, child) {
           return [
             SimpleText(
-              text: "${viewModel.maxTime ~/ 60}:${viewModel.maxTime % 60}",
+              text:
+                  "${(maxTime ~/ 60).toString().padLeft(2, '0')}:${(maxTime % 60).toString().padLeft(2, '0')}",
               fontSize: 24,
               fontWeight: FontWeight.bold,
             )
@@ -69,6 +108,51 @@ class PraticePage extends StatelessWidget {
             },
           );
         });
+
+    final breathColumn = Column(
+      children: [
+        Selector<PraticePageViewmodel, List<int>>(
+            selector: (p0, p1) => p1.breathTimeList,
+            builder: (context, breathTimeList, child) {
+              var textList = breathTimeList
+                  .map((e) => SimpleText(
+                        text:
+                            "${(e ~/ 60).toString().padLeft(2, '0')}:${(e % 60).toString().padLeft(2, '0')}",
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ))
+                  .toList();
+              return Column(
+                children: textList,
+              );
+            }),
+      ],
+    );
+
+    final holdColumn = Column(
+      children: [
+        Selector<PraticePageViewmodel, List<int>>(
+            selector: (p0, p1) => p1.holdTimeList,
+            builder: (context, holdTimeList, child) {
+              var textList = holdTimeList
+                  .map((e) => SimpleText(
+                        text:
+                            "${(e ~/ 60).toString().padLeft(2, '0')}:${(e % 60).toString().padLeft(2, '0')}",
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ))
+                  .toList();
+              return Column(
+                children: textList,
+              );
+            }),
+      ],
+    );
+
+    final timeRow = Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [breathColumn.flexible(), holdColumn.flexible()],
+    );
 
     final startButton = Selector<PraticePageViewmodel, bool>(
       selector: (p0, p1) => p1.isCounting,
@@ -114,7 +198,13 @@ class PraticePage extends StatelessWidget {
               ],
             ),
             body: Column(
-              children: [lostLifeLabel, maxTimeLabel, slider, startButton],
+              children: [
+                lostLifeLabel,
+                maxTimeLabel,
+                slider,
+                startButton,
+                timeRow
+              ],
             ).singleChildScrollView()); // replace this with your desired widget
       },
     );

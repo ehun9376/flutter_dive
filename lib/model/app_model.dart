@@ -25,7 +25,7 @@ class AppModel extends ChangeNotifier {
     var url = Uri.parse(
         "http://yihuang.online/yihuang.online/ehun9376/flutterdive.json");
     var response = await http.get(url);
-    ;
+
     var json = jsonDecode(
         utf8.decode(response.body.toString().codeUnits))["canBuyType"];
     _dataModels = DataModel.fromListJson(json);
