@@ -245,7 +245,7 @@ class _PraticePageState extends State<PraticePage> {
               buttonMiniSize: const Size(200, 45),
               backgroundColor: isCounting ? Colors.red : Colors.green,
               buttonAction: () async {
-                if (appModel.life <= 0) {
+                if (appModel.life <= 0 && !isCounting) {
                   showAppSnackBar("沒有額度囉，請至設定頁購買。", context);
                   return;
                 }
