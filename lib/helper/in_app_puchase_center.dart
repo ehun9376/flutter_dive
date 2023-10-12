@@ -13,6 +13,7 @@ class IAPCenter {
   }
 
   init() async {
+    // print(InAppPurchase.instance.getPlatformAddition());
     final Stream purchaseUpdated = InAppPurchase.instance.purchaseStream;
     _subscription = purchaseUpdated.listen((purchaseDetailsList) {
       _listenToPurchaseUpdated(purchaseDetailsList);
@@ -35,13 +36,22 @@ class IAPCenter {
   }
 
   getQueryProductDetails() async {
-    final ProductDetailsResponse response =
-        await InAppPurchase.instance.queryProductDetails(kIds.toSet());
+    try {
+      final ProductDetailsResponse response =
+          await InAppPurchase.instance.queryProductDetails(kIds.toSet());
+      products = response.productDetails;
 
-    products = response.productDetails;
+      print(response);
+      // 正常處理產品資訊
+    } catch (e) {
+      // 處理錯誤
+      print('無法獲取產品資訊: $e');
+    }
   }
 
   bool buy(String wantBuyID) {
+    var ids = products.map((e) => e.id);
+    print(ids);
     if (products.map((e) => e.id).contains(wantBuyID)) {
       final ProductDetails productDetails =
           products.firstWhere((element) => element.id == wantBuyID);

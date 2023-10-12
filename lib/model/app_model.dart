@@ -51,7 +51,7 @@ class AppModel extends ChangeNotifier {
   Future<int> readData() async {
     final prefs = await SharedPreferences.getInstance();
     var getTime = prefs.getInt('time');
-    getTime ??= 3;
+    getTime ??= 99;
     return getTime;
   }
 }
