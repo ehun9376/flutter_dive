@@ -10,6 +10,11 @@ import 'package:flutter_dj/simple_widget/simple_button.dart';
 import 'package:flutter_dj/simple_widget/simple_text.dart';
 import 'package:provider/provider.dart';
 
+enum PraticeType {
+  co2,
+  o2,
+}
+
 class PraticePageViewmodel extends ChangeNotifier {
   bool _isCounting = false;
   bool get isCounting => _isCounting;
@@ -21,27 +26,90 @@ class PraticePageViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
+  PraticeType _type = PraticeType.co2;
+  PraticeType get type => _type;
+  set type(newValue) {
+    _type = newValue;
+    maxTime = maxTime;
+    notifyListeners();
+  }
+
+  toggleType(PraticeType ttype) {
+    type = ttype;
+  }
+
   var second = 1;
 
   int _maxTime = 0;
   int get maxTime => _maxTime;
   set maxTime(newValue) {
     _maxTime = newValue;
-    var breathTimeBaseline = 150;
-    List<int> copyList = List.from(breathTimeList);
 
-    for (var i = 0; i < copyList.length; i++) {
-      copyList[i] = breathTimeBaseline - 15 * i;
+    switch (type) {
+      case PraticeType.co2:
+        var breathTimeBaseline = 150;
+        List<int> copyList = List.from(breathTimeList);
+
+        for (var i = 0; i < copyList.length; i++) {
+          copyList[i] = breathTimeBaseline - 15 * i;
+        }
+
+        _breathTimeList = copyList;
+
+        List<int> copyHoldList = List.from(_holdTimeList);
+
+        for (var i = 0; i < copyHoldList.length; i++) {
+          copyHoldList[i] = _maxTime ~/ 2;
+        }
+        _holdTimeList = copyHoldList;
+
+        break;
+      case PraticeType.o2:
+        var breathTimeBaseline = 120;
+        List<int> copyList = List.from(breathTimeList);
+
+        for (var i = 0; i < copyList.length; i++) {
+          copyList[i] = breathTimeBaseline;
+        }
+
+        _breathTimeList = copyList;
+
+        List<int> copyHoldList = List.from(_holdTimeList);
+
+        for (var i = 0; i < copyHoldList.length; i++) {
+          var tempTime = int.parse(_maxTime.toString());
+          switch (i) {
+            case 0:
+              double multipliedDouble = tempTime * 0.3;
+              copyHoldList[i] = multipliedDouble.toInt();
+            case 1:
+              double multipliedDouble = tempTime * 0.4;
+              copyHoldList[i] = multipliedDouble.toInt();
+            case 2:
+              double multipliedDouble = tempTime * 0.5;
+              copyHoldList[i] = multipliedDouble.toInt();
+            case 3:
+              double multipliedDouble = tempTime * 0.58;
+              copyHoldList[i] = multipliedDouble.toInt();
+            case 4:
+              double multipliedDouble = tempTime * 0.66;
+              copyHoldList[i] = multipliedDouble.toInt();
+            case 5:
+              double multipliedDouble = tempTime * 0.75;
+              copyHoldList[i] = multipliedDouble.toInt();
+            case 6:
+              double multipliedDouble = tempTime * 0.83;
+              copyHoldList[i] = multipliedDouble.toInt();
+            case 7:
+              double multipliedDouble = tempTime * 0.83;
+              copyHoldList[i] = multipliedDouble.toInt();
+              break;
+          }
+        }
+        _holdTimeList = copyHoldList;
+
+        break;
     }
-
-    _breathTimeList = copyList;
-
-    List<int> copyHoldList = List.from(_holdTimeList);
-
-    for (var i = 0; i < copyHoldList.length; i++) {
-      copyHoldList[i] = _maxTime ~/ 2;
-    }
-    _holdTimeList = copyHoldList;
 
     notifyListeners();
   }
@@ -172,18 +240,59 @@ class _PraticePageState extends State<PraticePage> {
           ].row().padding();
         });
 
-    final slider = Selector<PraticePageViewmodel, int>(
-        selector: (p0, p1) => p1.maxTime,
-        builder: (context, maxTime, child) {
-          return Slider(
-            min: 0.0,
-            max: 60 * 10,
-            value: maxTime.toDouble(),
-            onChanged: (newValue) {
-              viewModel.maxTime = newValue.toInt();
-            },
-          );
-        });
+    final changeTypeMaxTimeRow = Selector<PraticePageViewmodel, PraticeType>(
+      selector: (p0, p1) => p1.type,
+      builder: (context, type, child) {
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SimpleButton(
+              buttontitle: "CO2",
+              backgroundColor:
+                  type == PraticeType.co2 ? Colors.green : Colors.transparent,
+              cornerRadius: 15,
+              fontSize: 24,
+              buttonAction: () {
+                viewModel.toggleType(PraticeType.co2);
+              },
+            ),
+            maxTimeLabel.flexible(),
+            SimpleButton(
+              buttontitle: "O2",
+              backgroundColor:
+                  type == PraticeType.o2 ? Colors.green : Colors.transparent,
+              fontSize: 24,
+              cornerRadius: 15,
+              buttonAction: () {
+                viewModel.toggleType(PraticeType.o2);
+              },
+            ),
+          ],
+        ).padding();
+      },
+    );
+
+    final slider = Column(
+      children: [
+        const SimpleText(
+          text: "請輸入您最佳的閉氣時間，並選擇訓練模式",
+          align: TextAlign.center,
+          fontSize: 16,
+        ),
+        Selector<PraticePageViewmodel, int>(
+            selector: (p0, p1) => p1.maxTime,
+            builder: (context, maxTime, child) {
+              return Slider(
+                min: 0.0,
+                max: 60 * 10,
+                value: maxTime.toDouble(),
+                onChanged: (newValue) {
+                  viewModel.maxTime = newValue.toInt();
+                },
+              );
+            }),
+      ],
+    );
 
     final breathColumn = Column(
       children: [
@@ -199,7 +308,7 @@ class _PraticePageState extends State<PraticePage> {
                       ))
                   .toList();
               return Column(
-                children: textList,
+                children: textList..insert(0, const SimpleText(text: "呼吸")),
               );
             }),
       ],
@@ -219,7 +328,7 @@ class _PraticePageState extends State<PraticePage> {
                       ))
                   .toList();
               return Column(
-                children: textList,
+                children: textList..insert(0, const SimpleText(text: "閉氣")),
               );
             }),
       ],
@@ -285,10 +394,10 @@ class _PraticePageState extends State<PraticePage> {
             body: Column(
               children: [
                 lostLifeLabel,
-                maxTimeLabel,
                 slider,
+                changeTypeMaxTimeRow,
                 startButton,
-                timeRow
+                timeRow,
               ],
             ).singleChildScrollView()); // replace this with your desired widget
       },
